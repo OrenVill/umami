@@ -485,7 +485,7 @@ describe('createUmamiMcpServer', () => {
         websiteId: WEBSITE_ID,
         startAt: '2024-01-01T00:00:00Z',
         endAt: '2024-01-08T00:00:00Z',
-        filters: { browser: 'chrome' },
+        browser: 'chrome',
       },
     });
 
@@ -526,7 +526,7 @@ describe('createUmamiMcpServer', () => {
           websiteId: WEBSITE_ID,
           startAt: '2024-01-01',
           type: 'path',
-          filters: { event: 'signup' },
+          event: 'signup',
         },
       });
 
@@ -538,7 +538,7 @@ describe('createUmamiMcpServer', () => {
 
     const result = await harness.client.callTool({
       name: 'get_event_stats',
-      arguments: { websiteId: WEBSITE_ID, startAt: '2024-01-01', filters: { event: 'signup' } },
+      arguments: { websiteId: WEBSITE_ID, startAt: '2024-01-01', event: 'signup' },
     });
 
     expect(result.isError).toBeFalsy();
@@ -553,7 +553,7 @@ describe('createUmamiMcpServer', () => {
         websiteId: WEBSITE_ID,
         startAt: '2024-01-01',
         type: 'event',
-        filters: { event: 'c.checkout' },
+        event: 'c.checkout',
       },
     });
 
@@ -715,7 +715,7 @@ describe('createUmamiMcpServer', () => {
   test('get_session_stats unwraps value objects', async () => {
     const result = await harness.client.callTool({
       name: 'get_session_stats',
-      arguments: { websiteId: WEBSITE_ID, startAt: '2024-01-01', filters: { country: 'US' } },
+      arguments: { websiteId: WEBSITE_ID, startAt: '2024-01-01', country: 'US' },
     });
 
     expect(result.isError).toBeFalsy();
@@ -825,10 +825,8 @@ describe('createUmamiMcpServer', () => {
         websiteId: WEBSITE_ID,
         startAt: '2024-01-01',
         funnelId: FUNNEL_ID,
-        steps: [
-          { type: 'path', value: '/' },
-          { type: 'event', value: 'signup' },
-        ],
+        stepsJson:
+          '[{"type":"path","value":"/"},{"type":"event","value":"signup"}]',
       },
     });
 
@@ -963,10 +961,8 @@ describe('createUmamiMcpServer', () => {
         websiteId: WEBSITE_ID,
         startAt: '2024-01-01',
         endAt: '2024-01-31',
-        steps: [
-          { type: 'path', value: '/' },
-          { type: 'event', value: 'signup' },
-        ],
+        stepsJson:
+          '[{"type":"path","value":"/"},{"type":"event","value":"signup"}]',
       },
     });
 
@@ -995,7 +991,7 @@ describe('createUmamiMcpServer', () => {
         startAt: '2024-01-01',
         endAt: '2024-01-31',
         currency: 'eur',
-        filters: { browser: 'Chrome' },
+        browser: 'Chrome',
       },
     });
     expect(result.isError).toBeFalsy();

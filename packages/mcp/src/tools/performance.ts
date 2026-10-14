@@ -1,6 +1,12 @@
 import { z } from 'zod';
 import { dateRangeInput, parseDateRange, timeUnit, timezone } from '../lib/dates';
-import { pageviewFiltersSchema, toFilterParams } from '../lib/filters';
+import {
+  assertNoEventFilter,
+  filtersFromInput,
+  pageviewEventGuardField,
+  pageviewFilterFields,
+  toFilterParams,
+} from '../lib/filters';
 import { clamp, DEFAULT_METRIC_LIMIT, MAX_METRIC_LIMIT } from '../lib/limits';
 import { defineTool } from '../lib/tool';
 
@@ -70,9 +76,15 @@ export const getPerformance = defineTool({
       ),
     unit: timeUnit.optional(),
     timezone: timezone.optional(),
-    filters: pageviewFiltersSchema.optional(),
+    ...pageviewFilterFields,
+    ...pageviewEventGuardField,
   }),
   async handler(input, { client }) {
+    assertNoEventFilter(
+      filtersFromInput(input, { allowEvent: true }),
+      'The event filter is not supported on performance tools. Use get_event_stats or get_event_series.',
+    );
+    const filters = filtersFromInput(input, { allowEvent: false });
     const range = parseDateRange(input);
     const common = {
       websiteId: input.websiteId,
@@ -80,7 +92,7 @@ export const getPerformance = defineTool({
       endAt: range.endAt,
       timezone: input.timezone ?? 'UTC',
       unit: input.unit ?? 'day',
-      ...toFilterParams(input.filters),
+      ...toFilterParams(filters),
     };
     const metric = input.metric ?? (input.breakdown ? 'lcp' : undefined);
 

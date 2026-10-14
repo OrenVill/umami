@@ -1,6 +1,12 @@
 import { z } from 'zod';
 import { dateRangeInput, parseDateRange, timezone } from '../lib/dates';
-import { pageviewFiltersSchema, toFilterParams } from '../lib/filters';
+import {
+  assertNoEventFilter,
+  filtersFromInput,
+  pageviewEventGuardField,
+  pageviewFilterFields,
+  toFilterParams,
+} from '../lib/filters';
 import { defineTool } from '../lib/tool';
 
 interface StatsRow {
@@ -67,9 +73,15 @@ export const getWebsiteStats = defineTool({
       .describe(
         'Comparison period: "prev" (previous period, default) or "yoy" (same period last year).',
       ),
-    filters: pageviewFiltersSchema.optional(),
+    ...pageviewFilterFields,
+    ...pageviewEventGuardField,
   }),
   async handler(input, { client }) {
+    assertNoEventFilter(
+      filtersFromInput(input, { allowEvent: true }),
+      'The event filter is not supported on pageview tools. Use get_event_stats or get_event_series.',
+    );
+    const filters = filtersFromInput(input, { allowEvent: false });
     const range = parseDateRange(input);
     const result = await client.getWebsiteStats({
       websiteId: input.websiteId,
@@ -77,7 +89,7 @@ export const getWebsiteStats = defineTool({
       endAt: range.endAt,
       timezone: input.timezone,
       compare: input.compare,
-      ...toFilterParams(input.filters),
+      ...toFilterParams(filters),
     });
     const current = firstRow(result);
     const comparison = firstRow((result as { comparison?: unknown })?.comparison);
